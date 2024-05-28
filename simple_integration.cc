@@ -35,38 +35,7 @@ double scale = 1;
 read_h5 *reader ;
 
 FILE *gp = NULL;
-int fit_list(char filename[]);
 
-void plot(vector<float> &dat, int n){
-    if(!gp)gp = popen("/opt/homebrew/bin/gnuplot --persist", "w");
-    fputs("plot \"-\" binary format = \"%float%float%float\" record = ", gp);
-    fprintf(gp, "%d using 1:2:3 palette\n", n);
-    fwrite(reinterpret_cast<char *>(&(dat[0])), sizeof(float),3*n, gp);
-    fflush(gp);
-}
-
-void plot(vector<double> &dat, int n){
-    if(!gp)gp = popen("/opt/homebrew/bin/gnuplot --persist", "w");
-    fputs("plot \"-\" binary format = \"%double%double%double\" record = ", gp);
-    fprintf(gp, "%d using 1:2:3 palette\n", n);
-    fwrite(reinterpret_cast<char *>(&(dat[0])), sizeof(double),3*n, gp);
-    fflush(gp);
-}
-
-void plot(vector<float> &dat, int i, int n)
-{
-    if(!gp)gp = popen("/opt/homebrew/bin/gnuplot --persist", "w");
-//    fputs("set cbrange [: 1e4] \n",gp);
-    fputs("plot \"-\" binary format = \"%float\" record = ", gp);
-    fprintf(gp, "%d  u 1", n);
-    for(int k = 1; k < i; k++){
-        fputs(", \"-\" binary format = \"%float\" record = ", gp);
-        fprintf(gp, "%d u 1", n);
-    }
-    fputs("\n", gp);
-    fwrite(reinterpret_cast<char *>(&(dat[0])), sizeof(float),n*i, gp);
-    fflush(gp);
-}
 
 template<class T>
 void read(const char fmt[], const char filename[], T *ptr, int size)
