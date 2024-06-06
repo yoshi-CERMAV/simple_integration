@@ -150,6 +150,25 @@ public:
         for(int i = 0; i < image_size; i++) data[i] =0;
     }
     
+    int accumulate_scan(int f0, int f1, DataSet &dataset, DataSpace &dataspace, hsize_t dims_out[], int *data)
+    {
+        hsize_t vec_size[2]={dims_out[1],dims_out[2]};
+        DataSpace memspace (2, vec_size);
+        int image_size = vec_size[0]*vec_size[1];
+        int *temp_data = new int[image_size];
+        reset(data, image_size);
+        hsize_t dataCount[3] = {1,dims_out[1],dims_out[2]};
+        hsize_t dataOffset[3] = {0, 0, 0};
+
+        for(int i = f0; i < f1; i++){
+            dataOffset[0] = i;
+            dataspace.selectHyperslab(H5S_SELECT_SET, dataCount, dataOffset);
+            dataset.read(temp_data, PredType::STD_I32LE, memspace, dataspace);
+            add(data, temp_data, image_size);
+        }
+    }
+
+    
     int accumulate_scan(DataSet &dataset, DataSpace &dataspace, hsize_t dims_out[], int *data)
     {
         hsize_t vec_size[2]={dims_out[1],dims_out[2]};
@@ -170,7 +189,25 @@ public:
     
     int accumulate_scan_D5(int i, int *data){return accumulate_scan(i, data, D5fmt_);}
     int accumulate_scan_WOS(int i, int *data){return accumulate_scan(i, data, WOSfmt_);}
+    int accumulate_scan_D5(int i, int f0, int f1, int *data){return accumulate_scan(i, f0, f1, data, D5fmt_);}
+    int accumulate_scan_WOS(int i, int f0, int f1, int *data){return accumulate_scan(i, f0, f1, data, WOSfmt_);}
 
+    int accumulate_scan(int i, int f0, int f1, int *data, const char fmt[])
+    {
+        if (!file_)set_filename (filename_);
+        snprintf(name, YN_MAX_LEN, fmt, i);
+        DataSet dataset = open_dataset(name);
+        DataSpace dataspace = dataset.getSpace();
+        hsize_t dims_out[3];
+        dataspace.getSimpleExtentDims(dims_out, NULL);
+ //       cout << dims_out[0] <<" "<<dims_out[1]<<" "<< dims_out[2]<<endl;
+        if(dims_out[0]==1) dataset.read(data, PredType::STD_I32LE, dataspace, dataspace);
+        else{
+            accumulate_scan(f0, f1, dataset, dataspace, dims_out, data);
+        }
+    }
+
+    
     int accumulate_scan(int i, int *data, const char fmt[])
     {
         if (!file_)set_filename (filename_);
@@ -179,7 +216,7 @@ public:
         DataSpace dataspace = dataset.getSpace();
         hsize_t dims_out[3];
         dataspace.getSimpleExtentDims(dims_out, NULL);
-        cout << dims_out[0] <<" "<<dims_out[1]<<" "<< dims_out[2]<<endl;
+ //       cout << dims_out[0] <<" "<<dims_out[1]<<" "<< dims_out[2]<<endl;
         if(dims_out[0]==1) dataset.read(data, PredType::STD_I32LE, dataspace, dataspace);
         else{ 
             accumulate_scan(dataset, dataspace, dims_out, data);
